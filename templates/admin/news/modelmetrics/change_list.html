@@ -1,0 +1,28 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  <li>
+    <form method="post" action="retrain/" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="button"
+              onclick="return confirm('Retrain the AI model with the current dataset? This may take several minutes.');">
+        &#9881; Retrain Model
+      </button>
+    </form>
+  </li>
+  {{ block.super }}
+{% endblock %}
+
+{% block content %}
+  {{ block.super }}
+
+  {% if chart %}
+  <div style="margin-top: 2rem;">
+    <h2>Performance Over Training Runs</h2>
+    <img src="data:image/png;base64,{{ chart }}"
+         alt="Metrics Chart"
+         style="max-width:100%; border:1px solid #ddd; border-radius:4px; padding:8px; background:#fff;">
+  </div>
+  {% endif %}
+{% endblock %}

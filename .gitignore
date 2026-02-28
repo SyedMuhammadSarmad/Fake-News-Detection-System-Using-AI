@@ -1,0 +1,33 @@
+# Django
+db.sqlite3
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# ML artefacts — generated at runtime, not source-controlled
+ml_models/
+
+# Datasets — large CSV files, download separately from Kaggle
+datasets/*.csv
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# Static files collected by Django
+staticfiles/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/

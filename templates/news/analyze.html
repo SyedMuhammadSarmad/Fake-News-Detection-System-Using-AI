@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Analyze Article — Fake News Detector{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-search me-2"></i>Analyze a News Article</h2>
+
+<div class="row g-4">
+  <!-- ── Submission Form ── -->
+  <div class="col-lg-6">
+    <div class="card card-shadow border-0">
+      <div class="card-body p-4">
+        <h5 class="card-title mb-3">Submit Article</h5>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {{ form|crispy }}
+          <div class="d-grid mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-cpu me-2"></i>Analyze with AI
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Result Card ── -->
+  <div class="col-lg-6">
+    {% if result %}
+    <div class="card card-shadow border-0 border-start border-4
+      {% if result.verdict == 'Real' %}border-success{% else %}border-danger{% endif %}">
+      <div class="card-body p-4">
+        <h5 class="card-title">Analysis Result</h5>
+        <div class="text-center my-3">
+          <div class="display-4
+            {% if result.verdict == 'Real' %}verdict-real{% else %}verdict-fake{% endif %}">
+            <i class="bi {% if result.verdict == 'Real' %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %} me-2"></i>
+            {{ result.verdict }}
+          </div>
+          <p class="text-muted mt-1">AI Verdict</p>
+        </div>
+
+        <h6>Confidence Score</h6>
+        <div class="progress mb-2" style="height: 24px;">
+          <div class="progress-bar
+            {% if result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}"
+            role="progressbar"
+            style="width: {{ result.confidence }}%;"
+            aria-valuenow="{{ result.confidence }}" aria-valuemin="0" aria-valuemax="100">
+            {{ result.confidence }}%
+          </div>
+        </div>
+        <p class="text-muted small">
+          The model is <strong>{{ result.confidence }}%</strong> confident
+          this article is <strong>{{ result.verdict }}</strong>.
+        </p>
+
+        <div class="d-flex gap-2 mt-3">
+          <a href="{% url 'history' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-clock-history me-1"></i>View History
+          </a>
+          <a href="{% url 'analyze' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat me-1"></i>Analyze Another
+          </a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card border-0 bg-light h-100 d-flex align-items-center justify-content-center">
+      <div class="text-center text-muted p-4">
+        <i class="bi bi-robot fs-1 d-block mb-3 text-secondary"></i>
+        <p class="mb-0">Submit a news article on the left and the AI will classify it as <strong>Real</strong> or <strong>Fake</strong> with a confidence score.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
