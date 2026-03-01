@@ -1,25 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Analysis History — Fake News Detector{% endblock %}
+{% block title %}History — TruthLens{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><i class="bi bi-clock-history me-2"></i>Analysis History</h2>
+<div class="page-header">
+  <h2><i class="bi bi-clock-history me-2" style="color:var(--accent);"></i>Analysis History</h2>
   <div class="d-flex gap-2">
-    <a href="{% url 'export_csv' %}" class="btn btn-outline-success">
+    <a href="{% url 'export_csv' %}" class="btn btn-outline-success btn-sm">
       <i class="bi bi-download me-1"></i>Export CSV
     </a>
-    <a href="{% url 'analyze' %}" class="btn btn-primary">
-      <i class="bi bi-search me-1"></i>New Analysis
+    <a href="{% url 'analyze' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-cpu me-1"></i>New Analysis
     </a>
   </div>
 </div>
 
 {% if articles %}
-<div class="card card-shadow border-0">
+<div class="card card-shadow">
   <div class="card-body p-0">
-    <table class="table table-striped table-hover mb-0">
-      <thead class="table-dark">
+    <table class="table table-hover mb-0">
+      <thead>
         <tr>
           <th>#</th>
           <th>Submitted</th>
@@ -32,15 +32,18 @@
       <tbody>
         {% for article in articles %}
         <tr>
-          <td class="text-muted">{{ forloop.counter }}</td>
-          <td class="text-muted small">{{ article.submitted_at|date:"M j, Y H:i" }}</td>
+          <td class="text-muted" style="font-family:'DM Mono',monospace;font-size:.8rem;">
+            {{ forloop.counter }}
+          </td>
+          <td class="text-muted" style="font-size:.8rem;white-space:nowrap;">
+            {{ article.submitted_at|date:"M j, Y H:i" }}
+          </td>
           <td>
             <span title="{{ article.text }}">{{ article.text|truncatechars:80 }}</span>
           </td>
           <td>
             {% if article.result %}
-              <span class="badge fs-6
-                {% if article.result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}">
+              <span class="badge fs-6 {% if article.result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}">
                 {% if article.result.verdict == 'Real' %}
                   <i class="bi bi-check-circle me-1"></i>
                 {% else %}
@@ -52,18 +55,18 @@
               <span class="badge bg-secondary">N/A</span>
             {% endif %}
           </td>
-          <td>
+          <td style="min-width:100px;">
             {% if article.result %}
-              <div class="progress" style="min-width:80px; height:18px;">
-                <div class="progress-bar
-                  {% if article.result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}"
-                  style="width:{{ article.result.confidence_score }}%">
-                  {{ article.result.confidence_score|floatformat:1 }}%
-                </div>
+              <div class="progress" style="height:6px;margin-bottom:3px;">
+                <div class="progress-bar {% if article.result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}"
+                     style="width:{{ article.result.confidence_score }}%;"></div>
               </div>
+              <span style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text-muted);">
+                {{ article.result.confidence_score|floatformat:1 }}%
+              </span>
             {% else %}—{% endif %}
           </td>
-          <td class="text-muted small">
+          <td class="text-muted" style="font-size:.8rem;white-space:nowrap;">
             {% if article.result %}{{ article.result.analyzed_at|date:"M j, Y H:i" }}{% else %}—{% endif %}
           </td>
         </tr>
@@ -72,11 +75,15 @@
     </table>
   </div>
 </div>
+
 {% else %}
-<div class="text-center text-muted py-5">
-  <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-  <p>You haven't analyzed any articles yet.</p>
-  <a href="{% url 'analyze' %}" class="btn btn-primary">Analyze Your First Article</a>
+<div class="text-center py-5">
+  <i class="bi bi-inbox fs-1 d-block mb-3" style="color:var(--border);"></i>
+  <p class="text-muted mb-3">You haven't analyzed any articles yet.</p>
+  <a href="{% url 'analyze' %}" class="btn btn-primary">
+    <i class="bi bi-cpu me-1"></i>Analyze Your First Article
+  </a>
 </div>
 {% endif %}
+
 {% endblock %}

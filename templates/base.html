@@ -1,65 +1,76 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Fake News Detector{% endblock %}</title>
-  <!-- Bootstrap 5 -->
+  <title>{% block title %}TruthLens — Fake News Detector{% endblock %}</title>
+
+  <!-- Google Fonts: Syne (headings) + DM Mono (data) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 + Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-  <style>
-    body { background-color: #f8f9fa; }
-    .navbar-brand { font-weight: 700; letter-spacing: .5px; }
-    .verdict-real  { color: #198754; font-weight: 700; }
-    .verdict-fake  { color: #dc3545; font-weight: 700; }
-    .card-shadow   { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-    footer { font-size: .85rem; color: #6c757d; }
-  </style>
+
+  <!-- Custom dark theme -->
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-<!-- ── Navbar ── -->
-<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+<!-- ── Navbar ───────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-md">
   <div class="container">
-    <a class="navbar-brand" href="{% url 'dashboard' %}">
-      <i class="bi bi-shield-check me-1"></i>Fake News Detector
+    <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+      <i class="bi bi-shield-fill-check me-2" style="color:var(--accent);"></i>Truth<span class="brand-dot">Lens</span>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navMenu" aria-expanded="false">
-      <span class="navbar-toggler-icon"></span>
+
+    <button class="navbar-toggler border-0 p-1" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="bi bi-list fs-4" style="color:var(--text-muted);"></i>
     </button>
+
     <div class="collapse navbar-collapse" id="navMenu">
       {% if user.is_authenticated %}
-      <ul class="navbar-nav me-auto">
+      <ul class="navbar-nav me-auto gap-1 mt-2 mt-md-0">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-house me-1"></i>Dashboard</a>
+          <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2 me-1"></i>Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'analyze' %}"><i class="bi bi-search me-1"></i>Analyze</a>
+          <a class="nav-link" href="{% url 'analyze' %}"><i class="bi bi-cpu me-1"></i>Analyze</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'history' %}"><i class="bi bi-clock-history me-1"></i>History</a>
         </li>
         {% if user.is_staff %}
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i>Admin Panel</a>
+          <a class="nav-link admin-link" href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i>Admin</a>
         </li>
         {% endif %}
       </ul>
-      <ul class="navbar-nav ms-auto">
+
+      <ul class="navbar-nav ms-auto mt-2 mt-md-0">
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#" data-bs-toggle="dropdown">
+            <span class="user-avatar">{{ user.username|slice:":1"|upper }}</span>
+            <span>{{ user.get_full_name|default:user.username }}</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+            <li>
+              <a class="dropdown-item" href="{% url 'profile' %}">
+                <i class="bi bi-person me-2"></i>Profile
+              </a>
+            </li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
-                <button type="submit" class="dropdown-item text-danger">
+                <button type="submit" class="dropdown-item" style="color:var(--fake)!important;">
                   <i class="bi bi-box-arrow-right me-2"></i>Logout
                 </button>
               </form>
@@ -67,18 +78,21 @@
           </ul>
         </li>
       </ul>
+
       {% else %}
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+      <ul class="navbar-nav ms-auto gap-2 mt-2 mt-md-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Sign in</a></li>
+        <li class="nav-item">
+          <a href="{% url 'register' %}" class="btn btn-primary btn-sm px-3">Register</a>
+        </li>
       </ul>
       {% endif %}
     </div>
   </div>
 </nav>
 
-<!-- ── Flash Messages ── -->
-<div class="container">
+<!-- ── Flash messages ───────────────────────────────────────── -->
+<div class="container mt-3">
   {% for message in messages %}
   <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
     {{ message }}
@@ -87,15 +101,15 @@
   {% endfor %}
 </div>
 
-<!-- ── Page Content ── -->
-<main class="container pb-5">
+<!-- ── Page content ─────────────────────────────────────────── -->
+<main class="container py-4 flex-grow-1">
   {% block content %}{% endblock %}
 </main>
 
-<!-- ── Footer ── -->
-<footer class="text-center py-3 border-top mt-auto">
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer class="text-center">
   <div class="container">
-    CS619 FYP &mdash; Fake News Detection System &mdash; Group F25PROJECT5A938
+    CS619 · FYP · Group F25PROJECT5A938 · Fake News Detection System
   </div>
 </footer>
 

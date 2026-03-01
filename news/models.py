@@ -61,6 +61,22 @@ class ModelMetrics(models.Model):
         verbose_name = 'Model Metrics'
         verbose_name_plural = 'Model Metrics'
 
+    @property
+    def accuracy_pct(self):
+        return round(self.accuracy * 100, 1)
+
+    @property
+    def precision_pct(self):
+        return round(self.precision * 100, 1)
+
+    @property
+    def recall_pct(self):
+        return round(self.recall * 100, 1)
+
+    @property
+    def f1_pct(self):
+        return round(self.f1_score * 100, 1)
+
     def __str__(self):
         return (
             f'Acc={self.accuracy:.3f} P={self.precision:.3f} '
