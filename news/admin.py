@@ -11,7 +11,10 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 
-from .models import AnalysisResult, Dataset, ModelMetrics, NewsArticle
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
+
+from .models import AnalysisResult, Dataset, ModelMetrics, NewsArticle, UsageReport
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -52,7 +55,44 @@ def _generate_metrics_chart(metrics_qs) -> str:
       7. Free memory:  plt.close(fig)
       8. Return encoded  (embed in template as <img src="data:image/png;base64,{{ chart }}">)
     """
-    pass
+
+    if not metrics_qs.exists():
+        return ''
+    
+    #Extract four lists from metrics_qs .label .accuracy .precision .recall .f1_score .trained_at
+    labels = [m.trained_at.strftime('%m/%d %H:%M') for m in metrics_qs]
+    accuracies = [m.accuracy for m in metrics_qs]
+    precisions = [m.precision for m in metrics_qs]
+    recalls = [m.recall for m in metrics_qs]
+    f1_score = [m.f1_score for m in metrics_qs]
+
+    #create figure
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    #create 4 lines
+    ax.plot(labels, accuracies,  marker='o', label='Accuracy')
+    ax.plot(labels, precisions,  marker='s', label='Precision')
+    ax.plot(labels, recalls, marker='^', label='Recall')
+    ax.plot(labels, f1_score, marker='D', label='F1-Score')
+
+    #styling
+    ax.set_ylim(0, 1.05)
+    ax.set_xlabel('Training Run')
+    ax.set_ylabel('Score')
+    ax.set_title('Model Performance Over Time')
+    ax.legend()
+    fig.tight_layout()
+
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    encoded = base64.b64encode(buf.read()).decode('utf-8')
+
+
+    plt.close(fig)
+
+    return encoded
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -148,4 +188,76 @@ class ModelMetricsAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         metrics_qs = ModelMetrics.objects.order_by('trained_at')
         extra_context['chart'] = _generate_metrics_chart(metrics_qs)
+        return super().changelist_view(request, extra_context=extra_context)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Usage report — pie chart helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _generate_usage_chart(total_real: int, total_fake: int) -> str:
+    """Pie chart showing Real vs Fake distribution across all analyses."""
+    if total_real + total_fake == 0:
+        return ''
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.pie(
+        [total_real, total_fake],
+        labels=['Real', 'Fake'],
+        colors=['#28a745', '#dc3545'],
+        autopct='%1.1f%%',
+        startangle=90,
+    )
+    ax.set_title('Real vs Fake Distribution')
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    encoded = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return encoded
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Usage report admin
+# ─────────────────────────────────────────────────────────────────────────────
+
+@admin.register(UsageReport)
+class UsageReportAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/news/usagereport/change_list.html'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        total_articles = NewsArticle.objects.count()
+        total_real     = AnalysisResult.objects.filter(verdict='Real').count()
+        total_fake     = AnalysisResult.objects.filter(verdict='Fake').count()
+        total_users    = get_user_model().objects.filter(is_staff=False).count()
+
+        user_stats = (
+            NewsArticle.objects
+            .values('user__username')
+            .annotate(
+                total=Count('id'),
+                real=Count('id', filter=Q(result__verdict='Real')),
+                fake=Count('id', filter=Q(result__verdict='Fake')),
+            )
+            .order_by('-total')
+        )
+
+        extra_context.update({
+            'total_articles': total_articles,
+            'total_real':     total_real,
+            'total_fake':     total_fake,
+            'total_users':    total_users,
+            'user_stats':     user_stats,
+            'chart':          _generate_usage_chart(total_real, total_fake),
+        })
         return super().changelist_view(request, extra_context=extra_context)

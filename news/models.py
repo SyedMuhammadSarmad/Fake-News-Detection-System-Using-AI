@@ -67,3 +67,11 @@ class ModelMetrics(models.Model):
             f'R={self.recall:.3f} F1={self.f1_score:.3f} '
             f'@ {self.trained_at.strftime("%Y-%m-%d %H:%M")}'
         )
+
+
+class UsageReport(AnalysisResult):
+    """Proxy model — gives Usage Reports its own admin page (no extra DB table)."""
+    class Meta:
+        proxy = True
+        verbose_name        = 'Usage Report'
+        verbose_name_plural = 'Usage Reports'
