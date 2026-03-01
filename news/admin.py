@@ -144,7 +144,7 @@ class DatasetAdmin(admin.ModelAdmin):
 
 @admin.register(ModelMetrics)
 class ModelMetricsAdmin(admin.ModelAdmin):
-    list_display    = ['accuracy', 'precision', 'recall', 'f1_score', 'trained_at']
+    list_display    = ['accuracy_pct', 'precision_pct', 'recall_pct', 'f1_pct', 'trained_at']
     readonly_fields = ['accuracy', 'precision', 'recall', 'f1_score', 'trained_at']
     change_list_template = 'admin/news/modelmetrics/change_list.html'
 
