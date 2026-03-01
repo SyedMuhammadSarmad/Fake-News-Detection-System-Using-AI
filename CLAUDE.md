@@ -16,11 +16,16 @@ A Python-based web application that lets users submit news articles or headlines
 
 | Layer | Technology |
 |---|---|
-| Language | Python |
-| ML Libraries | Scikit-learn, Pandas, NumPy, NLTK |
-| Dataset | Kaggle Public Fake News Dataset |
-| IDE | VS Code / Jupyter Notebook |
-| Visualization | Matplotlib, Seaborn |
+| Language | Python 3.12 |
+| Web Framework | Django 5 |
+| Auth | Django built-in auth + custom `AbstractUser` |
+| Admin Panel | Django Admin (auto-generated, customized) |
+| Database | SQLite (Django default, zero config) |
+| Forms + UI | Django Crispy Forms + Bootstrap 5 (CDN) |
+| ML Libraries | Scikit-learn, Pandas, NLTK, Joblib |
+| ML Model | TF-IDF (50k features, bigrams) + Logistic Regression → `.joblib` |
+| Dataset | Kaggle "Fake and Real News Dataset" (clmentbisaillon) — `True.csv` + `Fake.csv` |
+| Visualization | Matplotlib/Seaborn → base64-encoded PNG embedded in templates |
 | Version Control | GitHub |
 
 > Use the **latest and smartest Python-based tools/platforms**. Non-Python solutions risk rejection.
@@ -57,19 +62,23 @@ A Python-based web application that lets users submit news articles or headlines
 │           Interface Layer           │
 │  User Dashboard  |  Admin Dashboard │
 │       Main Page  |  Login / Register│
+│   Bootstrap 5 templates (Jinja2)   │
 └──────────────┬──────────────────────┘
                │ HTTP
 ┌──────────────▼──────────────────────┐
 │         Application Layer           │
-│  Flask / FastAPI backend            │
-│  Auth, News Analysis, Admin APIs    │
+│  Django 5 (accounts + news apps)   │
+│  Auth, News Analysis, Admin views  │
+│  Django Admin (customized)         │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
 │         Data / ML Layer             │
-│  Database (Users, News, History)    │
-│  Scikit-learn ML Model              │
-│  Dataset storage (CSV uploads)      │
+│  SQLite (ORM via Django models)    │
+│  ml/ package: preprocessor,        │
+│  trainer, predictor (pure Python)  │
+│  Saved model: ml_models/*.joblib   │
+│  Dataset CSVs: datasets/           │
 └─────────────────────────────────────┘
 ```
 
@@ -97,7 +106,7 @@ Maintain **foreign key relationships** between all tables.
 | View Analysis History | Fetch user's past submissions and results |
 | Test with Sample Datasets | Run model against sample data |
 | View Visualizations | Graphs: accuracy trends, Real/Fake distribution |
-| Export Results | Download results as PDF or Excel |
+| Export Results | Download results as CSV (Export button on history page) |
 | Admin – Add/Update/Delete User | Full CRUD on user accounts |
 | Admin – Upload Dataset | CSV upload only; validate format |
 | Admin – Retrain Model | Trigger retraining with latest dataset |
@@ -144,29 +153,95 @@ Maintain **foreign key relationships** between all tables.
 
 ---
 
-## Project File Structure (Recommended)
+## Project File Structure (Actual)
 
 ```
 fake-news-detection/
-├── app/
-│   ├── __init__.py
-│   ├── routes/
-│   │   ├── auth.py         # Login, registration
-│   │   ├── user.py         # News submission, history
-│   │   └── admin.py        # Admin CRUD, dataset, retrain
-│   ├── models/
-│   │   ├── db_models.py    # SQLAlchemy/ORM table definitions
-│   │   └── ml_model.py     # ML training & inference
-│   ├── templates/          # HTML templates
-│   └── static/             # CSS, JS, assets
-├── datasets/               # Uploaded CSV files
-├── ml/
-│   ├── train.py            # Model training script
-│   └── saved_model/        # Persisted model files
-├── tests/                  # Unit/integration tests
+├── core/                        # Django project config
+│   ├── settings.py              # DB, INSTALLED_APPS, AUTH_USER_MODEL, paths
+│   ├── urls.py                  # Root URL conf (admin + accounts + news)
+│   └── wsgi.py
+├── accounts/                    # Django app: custom User model, auth views
+│   ├── models.py                # CustomUser (AbstractUser + verified field)
+│   ├── views.py                 # register(), profile()
+│   ├── forms.py                 # RegistrationForm (email unique), ProfileForm
+│   ├── urls.py                  # /accounts/register/, /accounts/profile/
+│   └── admin.py                 # CustomUserAdmin: verify_users bulk action
+├── news/                        # Django app: analysis, history, export
+│   ├── models.py                # NewsArticle, AnalysisResult, Dataset, ModelMetrics
+│   ├── views.py                 # dashboard(), analyze(), history(), export_csv()
+│   ├── forms.py                 # NewsSubmissionForm, DatasetUploadForm
+│   ├── urls.py                  # /news/dashboard|analyze|history|export/
+│   └── admin.py                 # DatasetAdmin, ModelMetricsAdmin + retrain endpoint
+│                                #   _generate_metrics_chart() — TODO(human) #3
+├── ml/                          # Pure Python ML package (no Django imports)
+│   ├── preprocessor.py          # clean_text() — TODO(human) #1
+│   ├── trainer.py               # train_model(dataset_dir, model_dir) -> dict
+│   └── predictor.py             # predict(text, model_dir) -> dict — TODO(human) #2
+├── templates/
+│   ├── base.html                # Bootstrap 5 navbar, flash messages, footer
+│   ├── admin/news/modelmetrics/ # change_list.html — Retrain button + chart img
+│   ├── accounts/                # login.html, register.html, profile.html
+│   └── news/                    # dashboard.html, analyze.html, history.html
+├── static/css/                  # Custom CSS (if needed)
+├── datasets/                    # True.csv + Fake.csv from Kaggle go here
+├── ml_models/                   # model.joblib + vectorizer.joblib (generated on retrain)
+├── db.sqlite3                   # SQLite database (auto-created on migrate)
+├── manage.py
 ├── requirements.txt
-└── CLAUDE.md               # This file
+└── CLAUDE.md                    # This file
 ```
+
+### Key settings (core/settings.py)
+```python
+AUTH_USER_MODEL  = 'accounts.CustomUser'   # set BEFORE first migration
+ML_MODEL_DIR     = BASE_DIR / 'ml_models'
+MEDIA_ROOT       = BASE_DIR / 'datasets'
+LOGIN_REDIRECT_URL   = '/news/dashboard/'
+LOGOUT_REDIRECT_URL  = '/accounts/login/'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+```
+
+### Run the server
+```bash
+# One-time setup
+python3 -m pip install -r requirements.txt
+python3 manage.py migrate
+python3 manage.py createsuperuser   # or use default: admin / admin123
+
+# Development server
+python3 manage.py runserver
+# → http://127.0.0.1:8000/
+```
+
+### Admin credentials (auto-created)
+- Username: `admin` | Password: `admin123`
+- Login at `http://127.0.0.1:8000/admin/`
+
+---
+
+## Implementation Status
+
+| Phase | Status | Notes |
+|---|---|---|
+| Phase 1 — Project setup | ✅ Done | Django 5, settings, urls, manage.py |
+| Phase 2 — DB models + migrations | ✅ Done | CustomUser, NewsArticle, AnalysisResult, Dataset, ModelMetrics |
+| Phase 3 — Auth (register/profile/login) | ✅ Done | register → verified=False → admin approves |
+| Phase 4 — ML pipeline | ✅ Done (partial) | trainer.py complete; `clean_text()` and `predict()` are **TODO(human)** |
+| Phase 5 — User views + templates | ✅ Done | dashboard, analyze, history, export CSV, all Bootstrap templates |
+| Phase 6 — Admin panel | ✅ Done (partial) | Retrain button wired; `_generate_metrics_chart()` is **TODO(human)** |
+
+### Student TODO(human) tasks remaining
+1. **`ml/preprocessor.py` → `clean_text()`** — 7-step NLP pipeline (lowercase → URLs → non-alpha → tokenize → stopwords → lemmatize → rejoin)
+2. **`ml/predictor.py` → `predict()`** — load joblib model, vectorize, predict label + proba, return verdict + confidence
+3. **`news/admin.py` → `_generate_metrics_chart()`** — matplotlib line chart → BytesIO → base64 string for inline `<img>`
+
+### Dataset required before training
+Place these two files in the `datasets/` folder:
+- `datasets/True.csv`
+- `datasets/Fake.csv`
+
+Download from Kaggle: **clmentbisaillon/fake-and-real-news-dataset**
 
 ---
 
@@ -175,5 +250,5 @@ fake-news-detection/
 - Must use **Python** (non-Python solutions may be rejected)
 - UI must be properly designed (no bare unstyled HTML)
 - All database tables must have properly defined relationships
-- Admin must be able to retrain the model from the UI
+- Admin must be able to retrain the model from the UI (`/admin/news/modelmetrics/retrain/`)
 - System metrics (accuracy, precision, recall, F1) must be visible to admin

@@ -1,0 +1,80 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<h1>System Usage Report</h1>
+
+<!-- ── Summary Cards ── -->
+<div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2rem;">
+
+  <div style="flex:1; min-width:160px; background:#e8f5e9; border-radius:8px; padding:1.2rem; text-align:center; border:1px solid #c8e6c9;">
+    <div style="font-size:2rem; font-weight:700; color:#2e7d32;">{{ total_articles }}</div>
+    <div style="color:#388e3c; font-size:.9rem;">Total Articles Analyzed</div>
+  </div>
+
+  <div style="flex:1; min-width:160px; background:#e3f2fd; border-radius:8px; padding:1.2rem; text-align:center; border:1px solid #bbdefb;">
+    <div style="font-size:2rem; font-weight:700; color:#1565c0;">{{ total_users }}</div>
+    <div style="color:#1976d2; font-size:.9rem;">Registered Users</div>
+  </div>
+
+  <div style="flex:1; min-width:160px; background:#e8f5e9; border-radius:8px; padding:1.2rem; text-align:center; border:1px solid #c8e6c9;">
+    <div style="font-size:2rem; font-weight:700; color:#2e7d32;">{{ total_real }}</div>
+    <div style="color:#388e3c; font-size:.9rem;">Classified as Real</div>
+  </div>
+
+  <div style="flex:1; min-width:160px; background:#ffebee; border-radius:8px; padding:1.2rem; text-align:center; border:1px solid #ffcdd2;">
+    <div style="font-size:2rem; font-weight:700; color:#c62828;">{{ total_fake }}</div>
+    <div style="color:#d32f2f; font-size:.9rem;">Classified as Fake</div>
+  </div>
+
+</div>
+
+<!-- ── Pie Chart ── -->
+{% if chart %}
+<div style="margin-bottom:2rem;">
+  <h2>Real vs Fake Distribution</h2>
+  <img src="data:image/png;base64,{{ chart }}"
+       alt="Usage Chart"
+       style="max-width:400px; border:1px solid #ddd; border-radius:4px; padding:8px; background:#fff;">
+</div>
+{% elif total_articles == 0 %}
+<p style="color:#888;">No articles have been analyzed yet. Usage chart will appear here once users submit articles.</p>
+{% endif %}
+
+<!-- ── Per-User Breakdown ── -->
+<h2>Per-User Breakdown</h2>
+{% if user_stats %}
+<table style="width:100%; border-collapse:collapse; background:#fff; border-radius:6px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.1);">
+  <thead>
+    <tr style="background:#417690; color:#fff;">
+      <th style="padding:.6rem 1rem; text-align:left;">#</th>
+      <th style="padding:.6rem 1rem; text-align:left;">Username</th>
+      <th style="padding:.6rem 1rem; text-align:center;">Total</th>
+      <th style="padding:.6rem 1rem; text-align:center;">Real</th>
+      <th style="padding:.6rem 1rem; text-align:center;">Fake</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in user_stats %}
+    <tr style="border-bottom:1px solid #eee; {% if forloop.counter|divisibleby:2 %}background:#f9f9f9;{% endif %}">
+      <td style="padding:.5rem 1rem; color:#888;">{{ forloop.counter }}</td>
+      <td style="padding:.5rem 1rem;">{{ row.user__username }}</td>
+      <td style="padding:.5rem 1rem; text-align:center; font-weight:600;">{{ row.total }}</td>
+      <td style="padding:.5rem 1rem; text-align:center; color:#2e7d32;">{{ row.real }}</td>
+      <td style="padding:.5rem 1rem; text-align:center; color:#c62828;">{{ row.fake }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="color:#888;">
+  {% if total_articles == 0 %}
+    No articles analyzed yet — per-user breakdown will appear here once users submit articles.
+  {% else %}
+    Per-user breakdown coming soon.
+  {% endif %}
+</p>
+{% endif %}
+
+{% endblock %}

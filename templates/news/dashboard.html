@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Fake News Detector{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-house me-2"></i>Dashboard</h2>
+  <a href="{% url 'analyze' %}" class="btn btn-primary">
+    <i class="bi bi-search me-1"></i>Analyze Article
+  </a>
+</div>
+
+<!-- ── Status Cards ── -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card card-shadow border-0 text-center p-3">
+      <div class="fs-1 text-primary"><i class="bi bi-newspaper"></i></div>
+      <div class="fs-3 fw-bold">{{ user.articles.count }}</div>
+      <div class="text-muted small">Articles Analyzed</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card card-shadow border-0 text-center p-3">
+      <div class="fs-1 {% if model_ready %}text-success{% else %}text-warning{% endif %}">
+        <i class="bi bi-cpu"></i>
+      </div>
+      <div class="fs-5 fw-bold mt-1">
+        {% if model_ready %}Ready{% else %}Not Trained{% endif %}
+      </div>
+      <div class="text-muted small">AI Model Status</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card card-shadow border-0 text-center p-3">
+      <div class="fs-1 text-info"><i class="bi bi-bar-chart"></i></div>
+      <div class="fs-3 fw-bold">
+        {% if latest_metrics %}{{ latest_metrics.accuracy|floatformat:1 }}%{% else %}—{% endif %}
+      </div>
+      <div class="text-muted small">Model Accuracy</div>
+    </div>
+  </div>
+</div>
+
+{% if not model_ready %}
+<div class="alert alert-warning">
+  <i class="bi bi-exclamation-triangle me-2"></i>
+  The AI model hasn't been trained yet. An administrator needs to upload a dataset
+  and click <strong>Retrain Model</strong> in the admin panel before you can analyze articles.
+</div>
+{% endif %}
+
+<!-- ── Recent Activity ── -->
+<div class="card card-shadow border-0">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history me-2"></i>Recent Activity</span>
+    <a href="{% url 'history' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+  </div>
+  <div class="card-body p-0">
+    {% if recent_articles %}
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Submitted</th>
+          <th>Preview</th>
+          <th>Verdict</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for article in recent_articles %}
+        <tr>
+          <td class="text-muted small">{{ article.submitted_at|date:"M j, H:i" }}</td>
+          <td>{{ article.text|truncatechars:60 }}</td>
+          <td>
+            {% if article.result %}
+              <span class="badge {% if article.result.verdict == 'Real' %}bg-success{% else %}bg-danger{% endif %}">
+                {{ article.result.verdict }}
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">N/A</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if article.result %}
+              {{ article.result.confidence_score|floatformat:1 }}%
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+      No articles analyzed yet.
+      <a href="{% url 'analyze' %}">Analyze your first article.</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
