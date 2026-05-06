@@ -34,9 +34,12 @@ class AnalysisResult(models.Model):
     def __str__(self):
         return f'{self.verdict} ({self.confidence_score:.1f}%) — Article #{self.article_id}'
 
+    
+
 
 class Dataset(models.Model):
     filename = models.CharField(max_length=255)
+    file = models.FileField(upload_to='',blank=True,null=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

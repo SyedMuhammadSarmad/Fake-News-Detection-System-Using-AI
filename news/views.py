@@ -132,3 +132,31 @@ def export_csv(request):
         ])
 
     return response
+
+'''
+register(request)
+
+  Two scenarios depending on request type:
+  - GET (user just visits the page) → create empty form → show registration page
+  - POST (user submitted the form) → validate data → if valid, save user to DB → redirect to login with success message   
+
+  form.is_valid() checks:
+  - No empty required fields
+  - Email is valid format
+  - Username not already taken
+  - Password1 matches password2
+
+  profile(request)
+
+  Same pattern:
+  - GET → load form pre-filled with current user's data
+  - POST → validate → save changes → redirect back to profile
+
+  instance=request.user is key — it tells the form "this is an existing user, update them" instead of creating a new one. 
+
+  @login_required
+  — if someone tries to visit /accounts/profile/ without being logged in, Django automatically redirects them to the login   page. Without this decorator anyone could access the profile page.
+
+  messages.success()
+  — stores a one-time flash message that gets displayed on the next page (like "Registration successful!").
+'''

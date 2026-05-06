@@ -135,6 +135,8 @@ class DatasetAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         obj.uploaded_by = request.user
+        if obj.file:
+            obj.filename = obj.filename
         super().save_model(request, obj, form, change)
 
 
