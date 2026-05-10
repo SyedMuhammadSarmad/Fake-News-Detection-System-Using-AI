@@ -5,9 +5,15 @@
 {% block content %}
 <div class="page-header">
   <h2><i class="bi bi-clock-history me-2" style="color:var(--accent);"></i>Analysis History</h2>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap">
     <a href="{% url 'export_csv' %}" class="btn btn-outline-success btn-sm">
-      <i class="bi bi-download me-1"></i>Export CSV
+      <i class="bi bi-filetype-csv me-1"></i>CSV
+    </a>
+    <a href="{% url 'export_excel' %}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel
+    </a>
+    <a href="{% url 'export_pdf' %}" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-file-earmark-pdf me-1"></i>PDF
     </a>
     <a href="{% url 'analyze' %}" class="btn btn-primary btn-sm">
       <i class="bi bi-cpu me-1"></i>New Analysis

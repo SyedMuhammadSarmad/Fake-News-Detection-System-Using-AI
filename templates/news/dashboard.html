@@ -47,6 +47,31 @@
 </div>
 {% endif %}
 
+<!-- ── Charts ──────────────────────────────────────────────── -->
+{% if real_count or fake_count %}
+<div class="row g-3 mb-4">
+
+  <div class="col-md-4">
+    <div class="card card-shadow h-100">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Real vs Fake Distribution</div>
+      <div class="card-body d-flex align-items-center justify-content-center" style="min-height:220px;">
+        <canvas id="verdictChart" style="max-height:200px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card card-shadow h-100">
+      <div class="card-header"><i class="bi bi-graph-up me-2"></i>Confidence Trend (last 15 analyses)</div>
+      <div class="card-body d-flex align-items-center" style="min-height:220px;">
+        <canvas id="trendChart" style="width:100%;max-height:200px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endif %}
+
 <!-- ── Recent Activity ─────────────────────────────────────── -->
 <div class="card card-shadow">
   <div class="card-header d-flex justify-content-between align-items-center">
@@ -100,4 +125,80 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if real_count or fake_count %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  var realCount   = {{ real_count }};
+  var fakeCount   = {{ fake_count }};
+  var trendLabels = {{ trend_labels|safe }};
+  var trendConf   = {{ trend_confidence|safe }};
+  var trendVerds  = {{ trend_verdicts|safe }};
+
+  /* Doughnut: Real vs Fake */
+  new Chart(document.getElementById('verdictChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Real', 'Fake'],
+      datasets: [{
+        data: [realCount, fakeCount],
+        backgroundColor: ['#28a745', '#dc3545'],
+        borderColor: ['#1a1a2e', '#1a1a2e'],
+        borderWidth: 3,
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#a0a0b8', font: { size: 12 } } },
+        tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.parsed; } } }
+      },
+      cutout: '65%',
+    }
+  });
+
+  /* Line: Confidence Trend */
+  var pointColors = trendVerds.map(function(v) { return v === 'Real' ? '#28a745' : '#dc3545'; });
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Confidence %',
+        data: trendConf,
+        borderColor: '#7b7bff',
+        backgroundColor: 'rgba(123,123,255,0.08)',
+        pointBackgroundColor: pointColors,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: { color: '#a0a0b8', callback: function(v) { return v + '%'; } },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+        },
+        x: { ticks: { color: '#a0a0b8', maxRotation: 45 }, grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(c) {
+              return ' ' + trendVerds[c.dataIndex] + ' — ' + c.parsed.y + '% confidence';
+            }
+          }
+        }
+      },
+    }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}
