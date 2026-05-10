@@ -24,6 +24,32 @@
             </button>
           </div>
         </form>
+
+        <!-- Sample Articles -->
+        <div class="mt-4">
+          <p class="text-muted mb-2" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.8px;">
+            <i class="bi bi-lightbulb me-1"></i>Try a sample
+          </p>
+          <div class="d-flex flex-column gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm text-start sample-btn"
+              data-text="WASHINGTON — The Federal Reserve raised its benchmark interest rate by a quarter percentage point on Wednesday, the ninth increase since March 2022, as policymakers continue their fight to bring inflation down to their 2 percent target. Officials signaled they may be nearing the end of their rate-increase campaign.">
+              <span class="badge bg-success me-2">Real</span>Fed rate hike — Reuters-style report
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm text-start sample-btn"
+              data-text="BREAKING: Scientists at MIT have confirmed that drinking coffee reverses aging and grants users immunity to all diseases. The government has been hiding this discovery for 30 years to protect pharmaceutical profits. Share this before it gets deleted!">
+              <span class="badge bg-danger me-2">Fake</span>Viral health misinformation sample
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm text-start sample-btn"
+              data-text="President Biden signed the Inflation Reduction Act into law on Tuesday, a sweeping climate, health care and tax package that Democrats muscled through Congress after more than a year of negotiations. The bill allocates nearly $370 billion to climate and clean energy provisions over the next decade.">
+              <span class="badge bg-success me-2">Real</span>Legislative news sample
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm text-start sample-btn"
+              data-text="SHOCKING: NASA has secretly landed humans on Mars in 2019. Leaked documents reveal a permanent underground colony of 2,000 people already living on the red planet. Mainstream media refuses to cover the story because global elites control all news outlets worldwide.">
+              <span class="badge bg-danger me-2">Fake</span>Conspiracy theory sample
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -95,4 +121,15 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.sample-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById('id_text').value = this.dataset.text;
+    document.getElementById('id_text').focus();
+  });
+});
+</script>
 {% endblock %}

@@ -1,4 +1,4 @@
-# Django
+# ── Django runtime ────────────────────────────────────────────
 db.sqlite3
 *.pyc
 __pycache__/
@@ -6,39 +6,53 @@ __pycache__/
 *.pyd
 .Python
 
-# ML artefacts — generated at runtime, not source-controlled
+# ── ML artefacts (generated on first retrain, not source files) ─
 ml_models/
 
-# Datasets — large CSV files, download separately from Kaggle
+# ── Datasets (large CSVs — download from Kaggle separately) ────
 datasets/*.csv
 
-# Environment
+# ── Python environments ────────────────────────────────────────
 .env
 .venv/
 venv/
 env/
 
-# Static files collected by Django
+# ── Django collectstatic output ───────────────────────────────
 staticfiles/
 
-# OS
+# ── OS ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+~$*
 
-# IDE
+# ── IDE / editor ──────────────────────────────────────────────
 .vscode/
 .idea/
+.claude/
 
-# Jupyter
+# ── Jupyter ───────────────────────────────────────────────────
 .ipynb_checkpoints/
 
-#learning
-learning
+# ── FYP documents / presentations (not part of the app) ───────
+*.ppt
+*.pptx
+*.doc
+*.docx
+*.drawio
+*.png
+srs.*
+use_case_gen.py
 
-from_scratch
+# ── Course / assignment files ──────────────────────────────────
+Fall 2025_CS619_11787_3 (1).md
+Fall 2025_CS619_11787_39521_F25PROJECT5A938.docx
+
+# ── Personal notes ─────────────────────────────────────────────
+learning/
+from_scratch/
 formula.md
 notes_recov.docx
-notes.docx 
+notes.docx
 notes.txt
 viva_preparation.md
-~$notes.docx
